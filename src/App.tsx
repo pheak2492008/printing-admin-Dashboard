@@ -1,6 +1,7 @@
 import { useState } from "react";
-import PrintQueueDashboard from "../src/pages/PrintQueueDashboard";
-import  OrdersPage  from "../src/pages/order";
+// Go into pages, then the specific folder, then the file
+import Dashboard from "./pages/Dashboard/Dashboard";
+import OrderPage from "./pages/Orders/OrderPage";
 
 import "./App.css";
 
@@ -9,15 +10,13 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* We pass 'setCurrentPage' as a prop named 'onNavigate' 
-         so the Dashboard can call it.
-      */}
       {currentPage === "dashboard" ? (
-        <PrintQueueDashboard onNavigate={setCurrentPage} />
+        <Dashboard onNavigate={setCurrentPage} />
       ) : (
-        <OrdersPage onNavigate={setCurrentPage} />
+        <OrderPage onNavigate={setCurrentPage} />
       )}
     </div>
   );
 }
+
 export default App;
