@@ -67,6 +67,9 @@ export default function Dashboard({
           <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
             Inventory
           </button>
+          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+            Profile
+          </button>
         </nav>
       </aside>
 
