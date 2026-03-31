@@ -1,5 +1,5 @@
-import { InventoryBar } from "../components/Dashboard/InventoryBar";
-import { StatusBadge } from "../components/Dashboard/StatusBadge"; // Make sure this is imported
+import { InventoryBar } from "../../components/Dashboard/InventoryBar";
+import { StatusBadge } from "../../components/Dashboard/StatusBadge"; // Make sure this is imported
 import type { Order, InventoryItem } from "../../types/dashboard";
 
 const orders: Order[] = [
@@ -42,37 +42,6 @@ export default function Dashboard({
 }) {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-64 bg-white border-r border-gray-100 p-6 flex flex-col">
-        <div className="mb-10">
-          <h1 className="font-bold text-xl text-blue-600">PrintQueue Pro</h1>
-          <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-            Admin Panel
-          </p>
-        </div>
-
-        <nav className="space-y-2 flex-1">
-          <button
-            onClick={() => onNavigate("dashboard")}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-bold rounded-xl transition-all"
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => onNavigate("orders")}
-            className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
-          >
-            Orders
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-            Inventory
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-            Profile
-          </button>
-        </nav>
-      </aside>
-
       <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full overflow-auto">
         <header className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
