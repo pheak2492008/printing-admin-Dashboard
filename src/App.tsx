@@ -1,33 +1,17 @@
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import OrderPage from "./pages/Orders/OrderPage";
-
+import InventoryPage from "./pages/Inventory/inventory";
+import ReportPage from "./pages/Report/report";
+import ProfilePage from "./pages/ProfileAdmin/profile";
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // 1. Determine which tab is active based on the URL path
-  const currentActive =
-    location.pathname === "/"
-      ? "dashboard"
-      : location.pathname.replace("/", "");
-
-  // 2. Function to change the URL when a sidebar item is clicked
-  const handleNavigation = (key: string) => {
-    if (key === "dashboard") {
-      navigate("/");
-    } else {
-      navigate(`/${key}`);
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* 3. Sidebar - Now receiving the required props to fix the error */}
-      <Navbar activeItem={currentActive} onNavigate={handleNavigation} />
+      {/* 1. Navbar no longer needs props because it uses NavLink internally */}
+      <Navbar />
 
-      {/* 4. Main Content Area */}
+      {/* 2. Main Content Area */}
       <main className="flex-1 overflow-auto">
         <Routes>
           <Route
@@ -41,7 +25,13 @@ function App() {
             }
           />
           <Route path="/orders" element={<OrderPage />} />
-          {/* You can add /inventory or /profile routes here later */}
+          <Route path="/reports" element={<ReportPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route
+            path="/login"
+            element={<div className="p-8">Login Page</div>}
+          />
         </Routes>
       </main>
     </div>
