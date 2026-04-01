@@ -47,7 +47,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-5xl font-black text-slate-800 tracking-tighter">
-            PrintPulse<span className="text-blue-600">PRO</span>
+            Printing Service<span className="text-blue-600">Shop</span>
           </h1>
           <p className="text-sm mt-4 font-bold uppercase tracking-[0.3em] text-slate-400">
             Enterprise Inventory Management
