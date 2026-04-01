@@ -66,7 +66,7 @@ export default function Navbar() {
         {!isCollapsed && (
           <div className="whitespace-nowrap animate-in fade-in duration-500">
             <h1 className="text-lg font-black text-slate-800 leading-tight tracking-tighter">
-              PrintPulse<span className="text-blue-600">PRO</span>
+              Printing Service<span className="text-blue-600">Shop</span>
             </h1>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Admin Console
