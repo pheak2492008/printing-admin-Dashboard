@@ -110,7 +110,7 @@ export default function Navbar() {
     { path: "/", label: "Dashboard", icon: <IconGrid /> },
     { path: "/orders", label: "Orders", icon: <IconOrders />, badge: 12 },
     { path: "/inventory", label: "Inventory", icon: <IconInventory /> },
-    { path: "/reports", label: "Reports", icon: <IconReport /> },
+    // { path: "/reports", label: "Reports", icon: <IconReport /> },
     { path: "/profile", label: "Profile", icon: <IconProfile /> },
   ];
 

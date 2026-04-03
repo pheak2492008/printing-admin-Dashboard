@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar/navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import OrderPage from "./pages/Orders/OrderPage";
 import InventoryPage from "./pages/Inventory/inventory";
-import ReportPage from "./pages/Report/report";
+// import ReportPage from "./pages/Report/report";
 import ProfilePage from "./pages/ProfileAdmin/profile";
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
             }
           />
           <Route path="/orders" element={<OrderPage />} />
-          <Route path="/reports" element={<ReportPage />} />
+          {/* <Route path="/reports" element={<ReportPage />} /> */}
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route

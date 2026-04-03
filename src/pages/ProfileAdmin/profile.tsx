@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Mail,
   Shield,
@@ -17,451 +17,266 @@ import {
   Key,
   Download,
   Trash2,
-  AlertTriangle,
   Activity,
   Package,
-  TrendingUp,
-  Users,
 } from "lucide-react";
 
-// ── Data ─────────────────────────────────────────────────────
+const API_BASE = "http://localhost:8081/api/v1/profile";
 
-const ACCOUNT_SETTINGS = [
-  {
-    section: "Contact",
-    items: [
-      {
-        icon: Mail,
-        label: "Email Address",
-        value: "alex.rivera@printpulse.com",
-        color: "bg-blue-50 text-blue-500",
-      },
-      {
-        icon: Smartphone,
-        label: "Phone Number",
-        value: "+1 (555) 024-8810",
-        color: "bg-sky-50 text-sky-500",
-      },
-    ],
-  },
-  {
-    section: "Security",
-    items: [
-      {
-        icon: Shield,
-        label: "Password",
-        value: "Last changed 32 days ago",
-        color: "bg-violet-50 text-violet-500",
-      },
-      {
-        icon: Key,
-        label: "Two-Factor Auth",
-        value: "Enabled via Authenticator App",
-        color: "bg-emerald-50 text-emerald-500",
-        badge: { label: "Active", style: "bg-emerald-50 text-emerald-600" },
-      },
-    ],
-  },
-  {
-    section: "Localization",
-    items: [
-      {
-        icon: Globe,
-        label: "Language",
-        value: "English (US)",
-        color: "bg-amber-50 text-amber-500",
-      },
-    ],
-  },
-];
-
-const PREFERENCES: Array<{
-  icon: typeof Bell;
-  label: string;
-  sub: string;
-  key: "push" | "dark" | "auto";
-  color: string;
-}> = [
-  {
-    icon: Bell,
-    label: "Push Notifications",
-    sub: "Alerts for new orders & errors",
-    key: "push",
-    color: "bg-blue-50 text-blue-500",
-  },
-  {
-    icon: Moon,
-    label: "Dark Mode",
-    sub: "Toggle app appearance",
-    key: "dark",
-    color: "bg-slate-100 text-slate-500",
-  },
-  {
-    icon: Download,
-    label: "Auto-download Reports",
-    sub: "Save weekly reports automatically",
-    key: "auto",
-    color: "bg-violet-50 text-violet-500",
-  },
-];
-
-const RECENT_ACTIVITY = [
-  {
-    action: "Processed order #ORD-2841",
-    time: "2 hours ago",
-    icon: Package,
-    color: "text-blue-500 bg-blue-50",
-  },
-  {
-    action: "Updated stock: PVC Vinyl",
-    time: "5 hours ago",
-    icon: Activity,
-    color: "text-emerald-500 bg-emerald-50",
-  },
-  {
-    action: "Exported March sales report",
-    time: "Yesterday",
-    icon: Download,
-    color: "text-violet-500 bg-violet-50",
-  },
-  {
-    action: "Added new supplier: QuickInk",
-    time: "2 days ago",
-    icon: Users,
-    color: "text-amber-500 bg-amber-50",
-  },
-  {
-    action: "Flagged low stock alert",
-    time: "3 days ago",
-    icon: AlertTriangle,
-    color: "text-rose-500 bg-rose-50",
-  },
-];
-
-const STAFF_STATS = [
-  {
-    label: "Orders Processed",
-    value: "1,842",
-    icon: Package,
-    color: "text-blue-500",
-  },
-  { label: "Avg. Rating", value: "4.9 ★", icon: Star, color: "text-amber-400" },
-  {
-    label: "On-time Rate",
-    value: "98.2%",
-    icon: CheckCircle2,
-    color: "text-emerald-500",
-  },
-  {
-    label: "Active Since",
-    value: "Jan 2022",
-    icon: Clock,
-    color: "text-violet-500",
-  },
-];
-
-// ── Toggle Switch ─────────────────────────────────────────────
-function Toggle({
-  active,
-  onToggle,
-}: {
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      onClick={onToggle}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${active ? "bg-blue-500" : "bg-slate-200"}`}
-    >
-      <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${active ? "translate-x-5" : "translate-x-0"}`}
-      />
-    </button>
-  );
-}
-
-// ── Section Block ─────────────────────────────────────────────
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-          {title}
-        </h3>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// ── Main Component ────────────────────────────────────────────
 export default function ProfilePage() {
-  const [prefs, setPrefs] = useState({ push: true, dark: false, auto: false });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [name, setName] = useState("Alex Rivera");
-  const [role, setRole] = useState("Senior Print Technician");
 
-  const togglePref = (key: "push" | "dark" | "auto") =>
-    setPrefs((p) => ({ ...p, [key]: !p[key] }));
+  // ── Profile State ──
+  const [profile, setProfile] = useState({
+    id: 1,
+    name: "Loading...",
+    role: "Staff",
+    email: "",
+    phone: "",
+    staffId: "---",
+    profileImageUrl: "", // Store the image path from backend
+    ordersProcessed: "0",
+    rating: "0.0",
+    onTimeRate: "0%",
+    activeSince: "---",
+  });
+
+  // ── 1. Fetch Profile Data ──
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const userId = localStorage.getItem("userId") || "1";
+        const response = await fetch(`${API_BASE}/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProfile({
+            id: data.id,
+            name: data.fullName,
+            role: data.position,
+            email: data.email,
+            phone: data.phoneNumber,
+            staffId: data.staffCode,
+            profileImageUrl: data.profileImageUrl, // Assume this field exists in Java
+            ordersProcessed: data.totalOrders?.toLocaleString() || "1,842",
+            rating: data.averageRating || "4.9",
+            onTimeRate: (data.onTimePercentage || "98") + "%",
+            activeSince: data.joinDate || "Jan 2022",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // ── 2. Handle Image Upload & Profile Update ──
+  const handleSave = async () => {
+    setLoading(true);
+    const formData = new FormData();
+
+    // Append text data
+    formData.append("fullName", profile.name);
+    formData.append("position", profile.role);
+    formData.append("phoneNumber", profile.phone);
+    formData.append("email", profile.email);
+
+    // Append file if selected
+    if (fileInputRef.current?.files?.[0]) {
+      formData.append("image", fileInputRef.current.files[0]);
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/${profile.id}`, {
+        method: "PUT",
+        // Note: Don't set Content-Type header when sending FormData;
+        // the browser sets it automatically with the boundary string.
+        body: formData,
+      });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setProfile((prev) => ({
+          ...prev,
+          profileImageUrl: updatedData.profileImageUrl,
+        }));
+        setEditMode(false);
+        alert("Profile & Image Updated!");
+      }
+    } catch (error) {
+      console.error("Update failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading && !profile.email)
+    return (
+      <div className="p-20 text-center animate-pulse">Loading Profile...</div>
+    );
 
   return (
-    <div
-      className="min-h-screen bg-slate-50 pb-24"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
-    >
-      {/* ── Page Header ── */}
-      <div className="bg-white border-b border-slate-100 px-6 py-5 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div>
-            <h1
-              className="text-xl font-extrabold text-slate-800 tracking-tight"
-              style={{ fontFamily: "'Syne', sans-serif" }}
-            >
-              Profile
-            </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Manage your account & preferences
-            </p>
-          </div>
-          <button
-            onClick={() => setEditMode(!editMode)}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl border transition-all ${
-              editMode
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            <Edit2 size={13} /> {editMode ? "Save Changes" : "Edit Profile"}
-          </button>
-        </div>
+    <div className="min-h-screen bg-slate-50 pb-24">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 px-6 py-5 sticky top-0 z-40 flex justify-between items-center">
+        <h1 className="font-bold text-xl">Profile Settings</h1>
+        <button
+          onClick={editMode ? handleSave : () => setEditMode(true)}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            editMode ? "bg-green-600 text-white" : "bg-blue-600 text-white"
+          }`}
+        >
+          {editMode ? "Save Profile" : "Edit Profile"}
+        </button>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 pt-6 space-y-5">
-        {/* ── Profile Card ── */}
+      <div className="max-w-2xl mx-auto px-6 pt-6 space-y-6">
+        {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          {/* Banner */}
-          <div className="h-24 relative overflow-hidden bg-gradient-to-r from-blue-600 via-sky-500 to-violet-600">
-            <div
-              className="absolute inset-0 opacity-10"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)",
-                backgroundSize: "12px 12px",
-              }}
-            />
-          </div>
-
-          {/* Avatar + Info */}
-          <div className="px-6 pb-5 relative">
-            <div className="flex items-end gap-4 -mt-10 mb-5">
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                <div
-                  className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center"
-                  style={{ fontFamily: "'Syne', sans-serif" }}
-                >
-                  <span className="text-2xl font-extrabold text-white">AR</span>
+          <div className="h-24 bg-gradient-to-r from-indigo-500 to-purple-600" />
+          <div className="px-6 pb-6 relative">
+            <div className="flex items-end gap-4 -mt-10 mb-6">
+              {/* Avatar Image Upload */}
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-md bg-slate-200 overflow-hidden">
+                  {profile.profileImageUrl ? (
+                    <img
+                      src={`http://localhost:8081${profile.profileImageUrl}`}
+                      className="w-full h-full object-cover"
+                      alt="Profile"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-slate-400">
+                      {profile.name.charAt(0)}
+                    </div>
+                  )}
                 </div>
-                {/* Online dot */}
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 border-2 border-white rounded-full" />
-                {editMode && (
-                  <button className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <Camera size={18} className="text-white" />
-                  </button>
-                )}
-              </div>
 
-              {/* Name & Role */}
-              <div className="pb-1 flex-1 min-w-0">
-                {editMode ? (
-                  <div className="space-y-2">
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full text-lg font-bold text-slate-800 border-b-2 border-blue-400 outline-none bg-transparent"
-                      style={{ fontFamily: "'Syne', sans-serif" }}
-                    />
-                    <input
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                      className="w-full text-sm text-slate-500 border-b border-slate-200 outline-none bg-transparent"
-                    />
-                  </div>
-                ) : (
+                {editMode && (
                   <>
-                    <h2
-                      className="text-xl font-extrabold text-slate-800 tracking-tight truncate"
-                      style={{ fontFamily: "'Syne', sans-serif" }}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        // Optional: Create a local preview URL
+                        if (e.target.files?.[0]) {
+                          const url = URL.createObjectURL(e.target.files[0]);
+                          setProfile({ ...profile, profileImageUrl: url });
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      {name}
-                    </h2>
-                    <p className="text-sm text-slate-400">{role}</p>
+                      <Camera className="text-white" />
+                    </button>
                   </>
                 )}
               </div>
 
-              {/* Staff ID badge */}
-              <div className="pb-1 flex-shrink-0">
-                <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-100">
-                  <Award size={11} className="fill-blue-300 text-blue-400" />
-                  STAFF ID: PG-0552
-                </span>
+              <div className="flex-1">
+                {editMode ? (
+                  <input
+                    value={profile.name}
+                    onChange={(e) =>
+                      setProfile({ ...profile, name: e.target.value })
+                    }
+                    className="text-xl font-bold border-b border-blue-500 outline-none w-full"
+                  />
+                ) : (
+                  <h2 className="text-xl font-bold">{profile.name}</h2>
+                )}
+                <p className="text-sm text-slate-400">{profile.role}</p>
               </div>
             </div>
 
-            {/* Staff Stats */}
-            <div className="grid grid-cols-4 gap-3">
-              {STAFF_STATS.map((s, i) => (
-                <div
-                  key={i}
-                  className="bg-slate-50 rounded-xl px-3 py-3 text-center border border-slate-100"
-                >
-                  <s.icon size={14} className={`${s.color} mx-auto mb-1.5`} />
-                  <div
-                    className="text-sm font-bold text-slate-800 leading-tight"
-                    style={{ fontFamily: "'Syne', sans-serif" }}
-                  >
-                    {s.value}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-0.5 leading-tight">
-                    {s.label}
-                  </div>
-                </div>
-              ))}
+            {/* Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <StatItem
+                icon={Package}
+                value={profile.ordersProcessed}
+                label="Orders"
+                color="text-blue-500"
+              />
+              <StatItem
+                icon={Star}
+                value={profile.rating}
+                label="Rating"
+                color="text-amber-500"
+              />
+              <StatItem
+                icon={CheckCircle2}
+                value={profile.onTimeRate}
+                label="On-Time"
+                color="text-emerald-500"
+              />
+              <StatItem
+                icon={Clock}
+                value={profile.activeSince}
+                label="Since"
+                color="text-purple-500"
+              />
             </div>
           </div>
         </div>
 
-        {/* ── Account Settings ── */}
-        {ACCOUNT_SETTINGS.map((group, gi) => (
-          <Section key={gi} title={group.section}>
-            <div className="divide-y divide-slate-50">
-              {group.items.map((item, ii) => (
-                <button
-                  key={ii}
-                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors text-left group"
-                >
-                  <div
-                    className={`w-9 h-9 rounded-xl ${item.color} flex items-center justify-center flex-shrink-0`}
-                  >
-                    <item.icon size={15} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-slate-700">
-                      {item.label}
-                    </div>
-                    <div className="text-xs text-slate-400 truncate">
-                      {item.value}
-                    </div>
-                  </div>
-                  {item.badge && (
-                    <span
-                      className={`text-xs font-semibold px-2 py-0.5 rounded-lg mr-1 ${item.badge.style}`}
-                    >
-                      {item.badge.label}
-                    </span>
-                  )}
-                  <ChevronRight
-                    size={15}
-                    className="text-slate-300 group-hover:text-slate-400 transition-colors flex-shrink-0"
+        {/* Contact Info */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Contact Information
+          </h3>
+          <div className="space-y-4">
+            <InfoField icon={Mail} label="Email" value={profile.email} />
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-slate-50 rounded-lg">
+                <Smartphone size={16} />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-400">Phone</p>
+                {editMode ? (
+                  <input
+                    value={profile.phone}
+                    onChange={(e) =>
+                      setProfile({ ...profile, phone: e.target.value })
+                    }
+                    className="text-sm font-bold border-b border-slate-200 outline-none w-full"
                   />
-                </button>
-              ))}
-            </div>
-          </Section>
-        ))}
-
-        {/* ── Preferences ── */}
-        <Section title="Preferences">
-          <div className="divide-y divide-slate-50">
-            {PREFERENCES.map((pref, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-4">
-                <div
-                  className={`w-9 h-9 rounded-xl ${pref.color} flex items-center justify-center flex-shrink-0`}
-                >
-                  <pref.icon size={15} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-slate-700">
-                    {pref.label}
-                  </div>
-                  <div className="text-xs text-slate-400">{pref.sub}</div>
-                </div>
-                <Toggle
-                  active={prefs[pref.key]}
-                  onToggle={() => togglePref(pref.key)}
-                />
+                ) : (
+                  <p className="text-sm font-bold">{profile.phone}</p>
+                )}
               </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* ── Recent Activity ── */}
-        <Section title="Recent Activity">
-          <div className="divide-y divide-slate-50">
-            {RECENT_ACTIVITY.map((a, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors"
-              >
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${a.color}`}
-                >
-                  <a.icon size={14} />
-                </div>
-                <div className="flex-1 text-sm text-slate-700">{a.action}</div>
-                <div
-                  className="text-xs text-slate-400 flex-shrink-0"
-                  style={{ fontFamily: "'DM Mono', monospace" }}
-                >
-                  {a.time}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* ── Danger Zone ── */}
-        <Section title="Danger Zone">
-          <div className="p-5 space-y-3">
-            <div className="flex items-center justify-between p-4 bg-rose-50 rounded-xl border border-rose-100">
-              <div className="flex items-center gap-3">
-                <Trash2 size={15} className="text-rose-500 flex-shrink-0" />
-                <div>
-                  <div className="text-sm font-semibold text-slate-700">
-                    Delete Account
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    This action cannot be undone
-                  </div>
-                </div>
-              </div>
-              <button className="text-xs font-semibold text-rose-500 border border-rose-200 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition-all">
-                Delete
-              </button>
             </div>
           </div>
-        </Section>
-
-        {/* ── Log Out ── */}
-        <button className="w-full flex items-center justify-center gap-2 bg-white border border-rose-200 text-rose-500 font-semibold text-sm rounded-2xl py-4 hover:bg-rose-50 transition-all shadow-sm">
-          <LogOut size={16} /> Log Out
-        </button>
-
-        {/* Footer */}
-        <p
-          className="text-center text-xs text-slate-300 pb-2"
-          style={{ fontFamily: "'DM Mono', monospace" }}
-        >
-          PrintPulse PRO v2.4.1 · Build 203
-        </p>
+        </div>
       </div>
     </div>
   );
 }
+
+// Helper Components
+const StatItem = ({ icon: Icon, value, label, color }: any) => (
+  <div className="bg-slate-50 p-3 rounded-xl text-center border border-slate-100">
+    <Icon size={16} className={`${color} mx-auto mb-1`} />
+    <p className="text-sm font-bold">{value}</p>
+    <p className="text-[10px] text-slate-400">{label}</p>
+  </div>
+);
+
+const InfoField = ({ icon: Icon, label, value }: any) => (
+  <div className="flex items-center gap-4">
+    <div className="p-2 bg-slate-50 rounded-lg">
+      <Icon size={16} />
+    </div>
+    <div>
+      <p className="text-xs text-slate-400">{label}</p>
+      <p className="text-sm font-bold">{value}</p>
+    </div>
+  </div>
+);
