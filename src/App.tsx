@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react"; // Added hooks
+import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar/navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import OrderPage from "./pages/Orders/OrderPage";
@@ -22,12 +22,11 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 function App() {
   const location = useLocation();
 
-  // 1. Use state so React re-renders when this changes
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem("isLoggedIn") === "true",
   );
 
-  // 2. Watch for location changes to re-check authentication
+  // Re-check auth when route changes
   useEffect(() => {
     setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
   }, [location]);
@@ -54,6 +53,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/orders"
             element={
@@ -62,6 +62,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/inventory"
             element={
@@ -70,6 +71,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/reports"
             element={
@@ -78,6 +80,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/profile"
             element={
