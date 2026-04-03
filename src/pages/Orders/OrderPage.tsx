@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { ExternalLink, Trash2, Printer, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { ExternalLink, Trash2, Printer, MessageSquare } from "lucide-react"; // Added MessageSquare icon
 
 interface Order {
   orderId: number;
@@ -10,6 +10,7 @@ interface Order {
   totalPrice: number;
   status: "PENDING" | "PRINTING" | "COMPLETED";
   designFileUrl: string;
+  description?: string; // ✅ 1. ADDED TO INTERFACE
 }
 
 export default function PrintQueueDashboard() {
@@ -103,13 +104,27 @@ export default function PrintQueueDashboard() {
                     <p className="font-black text-slate-600 text-sm">
                       {order.width}m x {order.length}m
                     </p>
+
+                    {/* ✅ 2. DISPLAY DESCRIPTION IF IT EXISTS */}
+                    {order.description && (
+                      <div className="flex items-start gap-1 mt-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100 max-w-[250px]">
+                        <MessageSquare
+                          size={12}
+                          className="text-blue-500 mt-1 flex-shrink-0"
+                        />
+                        <p className="text-[11px] font-bold text-blue-700 leading-tight">
+                          "{order.description}"
+                        </p>
+                      </div>
+                    )}
+
                     <button
                       onClick={() =>
                         window.open(
                           `http://localhost:8081${order.designFileUrl}`,
                         )
                       }
-                      className="text-indigo-600 text-[10px] font-black uppercase mt-2 flex items-center gap-1 hover:underline"
+                      className="text-indigo-600 text-[10px] font-black uppercase mt-3 flex items-center gap-1 hover:underline"
                     >
                       View Design <ExternalLink size={12} />
                     </button>
