@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ExternalLink, Trash2, Printer, MessageSquare } from "lucide-react"; // Added MessageSquare icon
+import { ExternalLink, Trash2, Printer, MessageSquare } from "lucide-react";
 
 interface Order {
   orderId: number;
@@ -10,7 +10,7 @@ interface Order {
   totalPrice: number;
   status: "PENDING" | "PRINTING" | "COMPLETED";
   designFileUrl: string;
-  description?: string; // ✅ 1. ADDED TO INTERFACE
+  description?: string;
 }
 
 export default function PrintQueueDashboard() {
@@ -46,6 +46,29 @@ export default function PrintQueueDashboard() {
       if (res.ok) fetchOrders();
     } catch (err) {
       alert("Update failed");
+    }
+  };
+
+  // ✅ 1. THE DELETE FUNCTION
+  const handleDelete = async (id: number) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this order forever?",
+    );
+
+    if (confirmDelete) {
+      try {
+        const response = await fetch(`http://localhost:8081/api/orders/${id}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          fetchOrders(); // Refresh table
+        } else {
+          alert("Failed to delete the order.");
+        }
+      } catch (error) {
+        console.error("Error deleting order:", error);
+      }
     }
   };
 
@@ -105,7 +128,6 @@ export default function PrintQueueDashboard() {
                       {order.width}m x {order.length}m
                     </p>
 
-                    {/* ✅ 2. DISPLAY DESCRIPTION IF IT EXISTS */}
                     {order.description && (
                       <div className="flex items-start gap-1 mt-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100 max-w-[250px]">
                         <MessageSquare
@@ -151,7 +173,12 @@ export default function PrintQueueDashboard() {
                           <Printer size={16} />
                         </button>
                       )}
-                      <button className="p-2 text-slate-300 hover:text-red-500 transition-all">
+
+                      {/* ✅ 2. CONNECTED THE DELETE FUNCTION HERE */}
+                      <button
+                        onClick={() => handleDelete(order.orderId)}
+                        className="p-2 text-slate-300 hover:text-red-500 transition-all"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
