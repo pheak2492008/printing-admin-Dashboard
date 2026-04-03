@@ -1,5 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { Loader2, Package, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 // --- Types ---
 interface InventoryItem {

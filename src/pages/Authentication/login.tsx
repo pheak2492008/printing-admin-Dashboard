@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Essential for routing
+import { useNavigate } from "react-router-dom";
 import {
-  ShieldCheck,
   ArrowRight,
   Loader2,
   Lock,
@@ -18,27 +17,49 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const navigate = useNavigate(); // Initialize navigation hook
+  const navigate = useNavigate();
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    // CHANGE THESE TWO LINES to match what you want to type:
-    if (email === "admin@printshop.com" && password === "admin123") {
-      setLoading(true);
-      setTimeout(() => {
+    try {
+      const response = await fetch("http://localhost:8081/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 1. Store the token and login state
+        // Assuming your API returns { token: "..." }
+        localStorage.setItem("token", data.token);
         localStorage.setItem("isLoggedIn", "true");
-        window.location.href = "/"; // This forces the app to see the login
-      }, 1500);
-    } else {
-      setError("Access Denied: Invalid Admin Credentials.");
+
+        // 2. Redirect to dashboard
+        window.location.href = "/";
+      } else {
+        // Show error message from backend (e.g., "Invalid credentials")
+        setError(data.message || "Access Denied: Invalid Admin Credentials.");
+      }
+    } catch (err) {
+      setError("Server Error: Connection failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen w-full flex overflow-hidden font-sans bg-white">
-      {/* LEFT PANEL: BRANDING */}
+      {/* LEFT PANEL: BRANDING (No changes here) */}
       <div className="hidden lg:flex w-1/2 flex-col items-center justify-center p-12 relative border-r border-slate-100">
         <div className="relative z-10 text-center animate-in fade-in slide-in-from-left-10 duration-1000">
           <div className="inline-flex p-6 rounded-[2.5rem] bg-slate-50 border border-slate-200/60 shadow-sm mb-8">
@@ -87,7 +108,7 @@ export default function Login() {
                 />
                 <input
                   type="email"
-                  placeholder="long@gmail.com"
+                  placeholder="admin@printshop.com"
                   className="w-full bg-white/10 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-blue-300/20 outline-none focus:bg-white/15 focus:border-white/30 transition-all"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -102,12 +123,6 @@ export default function Login() {
                 <label className="text-[10px] font-black text-blue-200 uppercase tracking-[0.2em]">
                   Access Key
                 </label>
-                <button
-                  type="button"
-                  className="text-[10px] font-bold text-blue-300 hover:text-white transition-colors uppercase tracking-widest"
-                >
-                  Reset?
-                </button>
               </div>
               <div className="relative group">
                 <Lock
@@ -154,6 +169,7 @@ export default function Login() {
             </button>
           </form>
 
+          {/* FOOTER STATUS (No changes here) */}
           <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between opacity-40">
             <div className="flex items-center gap-2">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
