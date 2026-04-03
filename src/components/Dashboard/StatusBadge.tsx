@@ -1,5 +1,5 @@
 // Use 'import type' to satisfy TypeScript's verbatimModuleSyntax
-import type { OrderStatus } from "../../../types/dashboard";
+import type { OrderStatus } from "../../types/dashboard";
 
 export const StatusBadge = ({ status }: { status: OrderStatus }) => {
   // TypeScript requires ALL keys from OrderStatus to be present here

@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 // Import type explicitly
-import type { Order, DpiQuality } from "../../../types/dashboard";
+import type { Order, DpiQuality } from "../../types/dashboard";
 
 interface OrderRowProps {
   order: Order;
