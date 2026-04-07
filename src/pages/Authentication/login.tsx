@@ -27,31 +27,38 @@ export default function Login() {
     try {
       const response = await fetch("http://localhost:8081/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // 1. Store the token and login state
-        // Assuming your API returns { token: "..." }
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("isLoggedIn", "true");
+        // DEBUG: See exactly what your backend is sending
+        console.log("Backend Response:", data);
 
-        // 2. Redirect to dashboard
-        window.location.href = "/";
+        // 1. Determine which key your backend uses for ID (id or userId)
+        const idToStore = data.userId || data.id;
+
+        if (!idToStore) {
+          setError("Login successful, but Backend failed to send a User ID.");
+          return;
+        }
+
+        // 2. Store the data safely
+        localStorage.setItem("token", data.token || data.accessToken);
+        localStorage.setItem("accessToken", data.accessToken || data.token);
+        localStorage.setItem("userId", idToStore.toString());
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userEmail", email);
+
+        // 3. Redirect
+        window.location.href = "/"; // Go straight to profile to test it
       } else {
-        // Show error message from backend (e.g., "Invalid credentials")
-        setError(data.message || "Access Denied: Invalid Admin Credentials.");
+        setError(data.message || "Access Denied: Invalid Credentials.");
       }
     } catch (err) {
-      setError("Server Error: Connection failed. Please try again.");
+      setError("Server Error: Connection failed.");
     } finally {
       setLoading(false);
     }
