@@ -1,4 +1,4 @@
-import type { InventoryItem } from "../../../types/dashboard";
+import type { InventoryItem } from "../../types/dashboard";
 
 export const InventoryBar = ({ item }: { item: InventoryItem }) => {
   const pct = (item.used / item.total) * 100;
