@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-import { InventoryBar } from "../../components/Dashboard/InventoryBar";
-import { StatusBadge } from "../../components/Dashboard/StatusBadge"; // Make sure this is imported
-=======
 import React, { useState, useEffect } from "react";
 import { InventoryBar } from "../../components/Dashboard/InventoryBar";
 import { StatusBadge } from "../../components/Dashboard/StatusBadge";
->>>>>>> staging
 import type { Order, InventoryItem } from "../../types/dashboard";
 import { Link } from "react-router-dom";
 
