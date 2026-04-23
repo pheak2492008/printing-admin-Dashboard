@@ -10,7 +10,7 @@ import OrderPage from "./pages/Orders/OrderPage";
 import InventoryPage from "./pages/Inventory/inventory";
 <<<<<<< HEAD
 import ReportPage from "./pages/Report/report";
-import ProfilePage from "./pages/ProfileAdmin/profile";
+import ProfilePage from "./pages/Orders/ProfileAdmin/profile";
 function App() {
   return (
     <div className="flex min-h-screen bg-gray-50">
