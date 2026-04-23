@@ -26,7 +26,7 @@ export default function Navbar() {
       badge: 12,
     },
     { path: "/inventory", label: "Inventory", icon: <Package size={20} /> },
-    { path: "/reports", label: "Reports", icon: <BarChart2 size={20} /> },
+    { path: "/reviews", label: "Reviews", icon: <BarChart2 size={20} /> },
     { path: "/profile", label: "Profile", icon: <User size={20} /> },
   ];
 

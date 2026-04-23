@@ -136,7 +136,6 @@ export default function InventoryPage() {
           value={stats.total}
           color="text-slate-800"
         />
-        <StatCard label="Low Stock" value={stats.low} color="text-red-600" />
         <StatCard
           label="Healthy Stock"
           value={stats.healthy}
