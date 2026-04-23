@@ -1,75 +1,82 @@
-import { InventoryBar } from "../components/Dashboard/InventoryBar";
-import { StatusBadge } from "../components/Dashboard/StatusBadge"; // Make sure this is imported
+<<<<<<< HEAD
+import { InventoryBar } from "../../components/Dashboard/InventoryBar";
+import { StatusBadge } from "../../components/Dashboard/StatusBadge"; // Make sure this is imported
+=======
+import React, { useState, useEffect } from "react";
+import { InventoryBar } from "../../components/Dashboard/InventoryBar";
+import { StatusBadge } from "../../components/Dashboard/StatusBadge";
+>>>>>>> staging
 import type { Order, InventoryItem } from "../../types/dashboard";
+import { Link } from "react-router-dom";
 
-const orders: Order[] = [
-  {
-    id: "#100",
-    client: "Phalla",
-    specs: { size: "2m x 5m", priority: "High" },
-    file: "A.xlsx",
-    filePages: 3,
-    status: "Pending",
-  },
-  {
-    id: "#101",
-    client: "Sophol",
-    specs: { size: "1m x 3m", priority: "Low" },
-    file: "1.PDF",
-    filePages: 2,
-    status: "Printing",
-  },
-  {
-    id: "#102",
-    client: "Dara",
-    specs: { size: "A4", priority: "Normal" },
-    file: "Doc.pdf",
-    filePages: 1,
-    status: "Done",
-  },
-];
-
-const inventory: InventoryItem[] = [
-  { name: "PVC Matte", used: 45, total: 100, unit: "100m", low: false },
-  { name: "Vinyl Sticker", used: 85, total: 100, unit: "100m", low: true },
-  { name: "Mesh Fabric", used: 72, total: 100, unit: "100m", low: false },
-];
+// --- API Configuration ---
+const BASE_URL = "http://localhost:8081/api";
 
 export default function Dashboard({
   onNavigate,
 }: {
   onNavigate: (page: string) => void;
 }) {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    activeOrders: 0,
+    lowStockCount: 0,
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch Orders from /api/orders/getall
+        const orderRes = await fetch(`${BASE_URL}/orders/getall`);
+        const orderData = await orderRes.json();
+
+        // 2. Fetch Materials from /api/materials/getall
+        const matRes = await fetch(`${BASE_URL}/materials/getall`);
+        const matData = await matRes.json();
+
+        // --- CALCULATE STATISTICS ---
+        const revenue = orderData.reduce(
+          (sum: number, item: any) => sum + item.totalPrice,
+          0,
+        );
+        const active = orderData.filter(
+          (item: any) => item.status !== "COMPLETED",
+        ).length;
+        const lowStock = matData.filter(
+          (item: any) => item.currentStock < 20,
+        ).length;
+
+        setOrders(orderData.slice(0, 5)); // Show only latest 5 in the "Live Queue"
+        setInventory(matData);
+        setStats({
+          totalRevenue: revenue,
+          activeOrders: active,
+          lowStockCount: lowStock,
+        });
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen font-black text-slate-400 italic animate-pulse">
+        SYNCING DASHBOARD DATA...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-64 bg-white border-r border-gray-100 p-6 flex flex-col">
-        <div className="mb-10">
-          <h1 className="font-bold text-xl text-blue-600">PrintQueue Pro</h1>
-          <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-            Admin Panel
-          </p>
-        </div>
-
-        <nav className="space-y-2 flex-1">
-          <button
-            onClick={() => onNavigate("dashboard")}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 font-bold rounded-xl transition-all"
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => onNavigate("orders")}
-            className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
-          >
-            Orders
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-            Inventory
-          </button>
-        </nav>
-      </aside>
-
       <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full overflow-auto">
         <header className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
@@ -80,14 +87,22 @@ export default function Dashboard({
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Total Revenue" value="$1,240" change="+12%" />
-          <StatCard label="Active Orders" value="12" change="+5%" />
+          <StatCard
+            label="Total Revenue"
+            value={`$${stats.totalRevenue.toFixed(2)}`}
+            change="+12%"
+          />
+          <StatCard
+            label="Active Orders"
+            value={stats.activeOrders.toString()}
+            change="+5%"
+          />
           <StatCard label="Completion" value="94%" change="+2%" />
           <StatCard
             label="Low Stock"
-            value="2 Items"
+            value={`${stats.lowStockCount} Items`}
             change="Action Req"
-            isWarn
+            isWarn={stats.lowStockCount > 0}
           />
         </div>
 
@@ -96,12 +111,12 @@ export default function Dashboard({
           <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-gray-800">Live Order Queue</h3>
-              <button
-                onClick={() => onNavigate("orders")}
+              <Link
+                to="/orders"
                 className="text-sm text-blue-500 font-semibold hover:underline"
               >
                 View All
-              </button>
+              </Link>
             </div>
 
             <table className="w-full text-left">
@@ -116,37 +131,44 @@ export default function Dashboard({
               <tbody className="divide-y divide-gray-50">
                 {orders.map((order) => (
                   <tr
-                    key={order.id}
+                    key={order.orderId}
                     className="group hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="py-4">
                       <div className="font-bold text-sm text-gray-800">
-                        {order.id}
+                        #{order.orderId}
                       </div>
                       <div className="text-xs text-gray-400">
-                        {order.client}
+                        {order.customerName}
                       </div>
                     </td>
                     <td className="py-4">
                       <div className="text-xs text-gray-600">
-                        {order.specs?.size}
+                        {order.width}m x {order.length}m
                       </div>
-                      <div
-                        className={`text-[10px] font-bold mt-1 px-1.5 py-0.5 rounded w-fit ${
-                          order.specs?.priority === "High"
-                            ? "bg-red-50 text-red-500"
-                            : order.specs?.priority === "Low"
-                              ? "bg-yellow-50 text-yellow-600"
-                              : "bg-gray-50 text-gray-500"
-                        }`}
-                      >
-                        {order.specs?.priority}
+                      <div className="text-[10px] font-bold mt-1 px-1.5 py-0.5 rounded w-fit bg-slate-100 text-slate-500 uppercase">
+                        {order.dpiQuality || "Standard"}
                       </div>
                     </td>
                     <td className="py-4">
-                      <div className="flex items-center gap-2 text-xs text-gray-500 group-hover:text-blue-500 transition-colors">
-                        <span className="opacity-50">📄</span> {order.file}
-                      </div>
+                      {/* Interactive File Link */}
+                      <button
+                        onClick={() =>
+                          window.open(
+                            `http://localhost:8081${order.designFileUrl}`,
+                          )
+                        }
+                        className="flex items-center gap-2 group/file text-left"
+                      >
+                        <div className="p-1.5 bg-slate-50 rounded group-hover/file:bg-blue-50 transition-colors">
+                          {order.designFileUrl?.match(/\.(jpg|jpeg|png|gif)$/i)
+                            ? "🖼️"
+                            : "📄"}
+                        </div>
+                        <span className="text-[11px] font-bold text-slate-500 group-hover/file:text-blue-600 truncate max-w-[100px]">
+                          {order.designFileUrl?.split("_").pop() || "View"}
+                        </span>
+                      </button>
                     </td>
                     <td className="py-4">
                       <StatusBadge status={order.status} />
@@ -162,7 +184,16 @@ export default function Dashboard({
             <h3 className="font-bold text-gray-800 mb-6">Inventory Levels</h3>
             <div className="space-y-6">
               {inventory.map((item, i) => (
-                <InventoryBar key={i} item={item} />
+                <InventoryBar
+                  key={i}
+                  item={{
+                    name: item.materialName,
+                    used: item.currentStock, // Assumes backend provides stock
+                    total: 100, // Static baseline
+                    unit: "m",
+                    low: item.currentStock < 20,
+                  }}
+                />
               ))}
             </div>
           </div>
