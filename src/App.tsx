@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar/navbar";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import OrderPage from "./pages/Orders/OrderPage";
 import InventoryPage from "./pages/Inventory/inventory";
-import ReportPage from "./pages/Report/report";
+import ReportPage from "./pages/Reviwe/reviwe";
 import ProfilePage from "./pages/ProfileAdmin/profile";
 import Login from "./pages/Authentication/login";
 import type { JSX } from "react";
@@ -73,7 +73,7 @@ function App() {
           />
 
           <Route
-            path="/reports"
+            path="/reviews"
             element={
               <ProtectedRoute>
                 <ReportPage />

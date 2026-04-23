@@ -84,7 +84,7 @@ export default function PrintQueueDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          {["All", "PENDING", "PRINTING", "COMPLETED"].map((tab) => (
+          {["All", "PENDING", "PRINTIN", "COMPLETED"].map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
