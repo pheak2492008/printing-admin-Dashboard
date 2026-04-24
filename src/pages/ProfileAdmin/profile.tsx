@@ -43,7 +43,7 @@ interface InfoItemProps {
   onChange?: (v: string) => void;
 }
 
-const API_BASE = "http://localhost:8081/api/v1/admin/profile";
+const API_BASE = "https://printing-back-end.onrender.com/api/v1/admin/profile";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -91,9 +91,15 @@ export default function ProfilePage() {
       // Parallel fetching from multiple endpoints
       const [profileRes, ordersRes, staffRes, reportsRes] = await Promise.all([
         fetch(`${API_BASE}/${userId}`, { headers }),
-        fetch("http://localhost:8081/api/orders/getall", { headers }),
-        fetch("http://localhost:8081/api/v1/users/all", { headers }),
-        fetch("http://localhost:8081/api/v1/reviews/summary", { headers }),
+        fetch("https://printing-back-end.onrender.com/api/orders/getall", {
+          headers,
+        }),
+        fetch("https://printing-back-end.onrender.com/api/v1/users/all", {
+          headers,
+        }),
+        fetch("https://printing-back-end.onrender.com/api/v1/reviews/summary", {
+          headers,
+        }),
       ]);
 
       // Update Profile
@@ -190,7 +196,9 @@ export default function ProfilePage() {
 
   const avatarSrc =
     previewUrl ||
-    (profile.avatarUrl ? `http://localhost:8081${profile.avatarUrl}` : null);
+    (profile.avatarUrl
+      ? `https://printing-back-end.onrender.com${profile.avatarUrl}`
+      : null);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-10 font-sans text-slate-800">

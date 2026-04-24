@@ -21,7 +21,9 @@ export default function PrintQueueDashboard() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8081/api/orders/getall");
+      const res = await fetch(
+        "https://printing-back-end.onrender.com/api/orders/getall",
+      );
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
@@ -40,7 +42,7 @@ export default function PrintQueueDashboard() {
   const updateStatus = async (id: number, status: string) => {
     try {
       const res = await fetch(
-        `http://localhost:8081/api/orders/${id}/status?status=${status}`,
+        `https://printing-back-end.onrender.com/api/orders/${id}/status?status=${status}`,
         { method: "PUT" },
       );
       if (res.ok) fetchOrders();
@@ -57,9 +59,12 @@ export default function PrintQueueDashboard() {
 
     if (confirmDelete) {
       try {
-        const response = await fetch(`http://localhost:8081/api/orders/${id}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(
+          `https://printing-back-end.onrender.com/api/orders/${id}`,
+          {
+            method: "DELETE",
+          },
+        );
 
         if (response.ok) {
           fetchOrders(); // Refresh table
