@@ -15,7 +15,7 @@ interface InventoryItem {
 }
 
 // Ensure this matches your running Spring Boot port
-const API_BASE = "http://localhost:8081/api/materials";
+const API_BASE = "https://printing-back-end.onrender.com/api/materials";
 
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);

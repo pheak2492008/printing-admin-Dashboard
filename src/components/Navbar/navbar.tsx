@@ -11,8 +11,6 @@ import {
   Printer,
 } from "lucide-react";
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export default function Navbar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -30,14 +28,37 @@ export default function Navbar() {
     { path: "/profile", label: "Profile", icon: <User size={20} /> },
   ];
 
-  const handleLogout = () => {
-    // 1. Clear Authentication State
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userRole");
+  // --- UPDATED LOGOUT LOGIC ---
+  const handleLogout = async () => {
+    try {
+      // 1. Call the backend API
+      const response = await fetch("http://localhost:8081/api/auth/logout", {
+        method: "POST", // Change to 'GET' if your backend specifically requires it
+        headers: {
+          "Content-Type": "application/json",
+          // Uncomment if you need to send the token for the server to invalidate it
+          // "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+      });
 
-    // 2. Redirect to Login and Force App Refresh
-    window.location.href = "/login";
+      if (!response.ok) {
+        console.warn(
+          "Server-side logout failed, but clearing local session anyway.",
+        );
+      }
+    } catch (error) {
+      console.error("Network error during logout:", error);
+    } finally {
+      // 2. Clear Authentication State (Client Side)
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("token"); // Good practice to remove the token too
+
+      // 3. Redirect to Login
+      window.location.href = "/login";
+    }
   };
+  // ----------------------------
 
   return (
     <aside
@@ -45,7 +66,6 @@ export default function Navbar() {
         isCollapsed ? "w-[78px]" : "w-64"
       }`}
     >
-      {/* Collapse Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute -right-3 top-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
@@ -56,7 +76,6 @@ export default function Navbar() {
         />
       </button>
 
-      {/* Brand Section */}
       <div
         className={`flex items-center gap-3 p-6 mb-2 overflow-hidden transition-all ${isCollapsed ? "justify-center" : ""}`}
       >
@@ -75,7 +94,6 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Navigation Links */}
       <nav className="flex-1 flex flex-col gap-1.5 p-4">
         {!isCollapsed && (
           <p className="px-3 pb-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
@@ -101,19 +119,6 @@ export default function Navbar() {
                 {item.label}
               </span>
             )}
-            {!isCollapsed && item.badge && (
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  window.location.pathname === item.path
-                    ? "bg-white text-blue-600"
-                    : "bg-blue-600 text-white"
-                }`}
-              >
-                {item.badge}
-              </span>
-            )}
-
-            {/* Tooltip for Collapsed Mode */}
             {isCollapsed && (
               <div className="absolute left-16 invisible group-hover:visible bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-lg whitespace-nowrap z-50 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity">
                 {item.label}
@@ -123,7 +128,6 @@ export default function Navbar() {
         ))}
       </nav>
 
-      {/* User Footer & Logout */}
       <div className="p-4 bg-slate-50/50 border-t border-slate-100">
         <div
           className={`flex items-center gap-3 ${isCollapsed ? "justify-center" : ""}`}
