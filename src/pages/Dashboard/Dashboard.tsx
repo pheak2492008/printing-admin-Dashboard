@@ -5,7 +5,7 @@ import type { Order, InventoryItem } from "../../types/dashboard";
 import { Link } from "react-router-dom";
 
 // --- API Configuration ---
-const BASE_URL = "https://printing-back-end.onrender.com/api";
+const BASE_URL = "http://localhost:8081/api";
 
 export default function Dashboard({
   onNavigate,
