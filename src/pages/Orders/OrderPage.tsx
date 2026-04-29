@@ -14,7 +14,7 @@ interface Order {
 }
 
 // ✅ FIX 1: URL must include /v1 to match your Spring Boot logs
-const BASE_URL = "http://localhost:8081/api/v1";
+const BASE_URL = "http://localhost:8082/api/v1";
 
 export default function PrintQueueDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -149,7 +149,7 @@ export default function PrintQueueDashboard() {
                       onClick={() =>
                         // ✅ Point to full backend URL for local files
                         window.open(
-                          `http://localhost:8081${order.designFileUrl}`,
+                          `http://localhost:8082${order.designFileUrl}`,
                         )
                       }
                       className="text-indigo-600 text-[10px] font-black uppercase mt-3 flex items-center gap-1 hover:underline"

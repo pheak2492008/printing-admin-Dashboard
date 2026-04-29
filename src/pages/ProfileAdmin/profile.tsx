@@ -43,7 +43,7 @@ interface InfoItemProps {
   onChange?: (v: string) => void;
 }
 
-const API_BASE = "http://localhost:8081/api/v1/admin/profile";
+const API_BASE = "http://localhost:8082/api/v1/admin/profile";
 
 export default function ProfilePage() {
   const navigate = useNavigate();

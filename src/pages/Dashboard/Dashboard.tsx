@@ -4,7 +4,7 @@ import { StatusBadge } from "../../components/Dashboard/StatusBadge";
 import { Link } from "react-router-dom";
 import AddProductModal from "../../components/Dashboard/AddProductModal";
 
-const BASE_URL = "http://localhost:8081/api/v1";
+const BASE_URL = "http://localhost:8082/api/v1";
 
 export default function Dashboard() {
   const [orders, setOrders] = useState<any[]>([]);

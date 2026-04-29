@@ -12,7 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:8081/api/v1/reviews";
+const API_BASE = "http://localhost:8082/api/v1/reviews";
 
 interface Review {
   id: number;

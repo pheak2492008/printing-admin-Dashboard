@@ -15,7 +15,7 @@ interface InventoryItem {
 }
 
 // Ensure this matches your running Spring Boot port
-const API_BASE = "http://localhost:8081/api/materials";
+const API_BASE = "http://localhost:8082/api/materials";
 
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
