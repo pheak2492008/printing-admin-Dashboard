@@ -13,6 +13,9 @@ interface Order {
   description?: string;
 }
 
+// ✅ FIX 1: URL must include /v1 to match your Spring Boot logs
+const BASE_URL = "http://localhost:8081/api/v1";
+
 export default function PrintQueueDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +24,8 @@ export default function PrintQueueDashboard() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8081/api/orders/getall");
+      // ✅ Updated URL
+      const res = await fetch(`${BASE_URL}/orders/getall`);
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
@@ -39,8 +43,9 @@ export default function PrintQueueDashboard() {
 
   const updateStatus = async (id: number, status: string) => {
     try {
+      // ✅ Updated URL
       const res = await fetch(
-        `http://localhost:8081/api/orders/${id}/status?status=${status}`,
+        `${BASE_URL}/orders/${id}/status?status=${status}`,
         { method: "PUT" },
       );
       if (res.ok) fetchOrders();
@@ -49,7 +54,6 @@ export default function PrintQueueDashboard() {
     }
   };
 
-  // ✅ 1. THE DELETE FUNCTION
   const handleDelete = async (id: number) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this order forever?",
@@ -57,12 +61,13 @@ export default function PrintQueueDashboard() {
 
     if (confirmDelete) {
       try {
-        const response = await fetch(`http://localhost:8081/api/orders/${id}`, {
+        // ✅ Updated URL
+        const response = await fetch(`${BASE_URL}/orders/${id}`, {
           method: "DELETE",
         });
 
         if (response.ok) {
-          fetchOrders(); // Refresh table
+          fetchOrders();
         } else {
           alert("Failed to delete the order.");
         }
@@ -84,7 +89,7 @@ export default function PrintQueueDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          {["All", "PENDING", "PRINTIN", "COMPLETED"].map((tab) => (
+          {["All", "PENDING", "PRINTING", "COMPLETED"].map((tab) => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
@@ -142,6 +147,7 @@ export default function PrintQueueDashboard() {
 
                     <button
                       onClick={() =>
+                        // ✅ Point to full backend URL for local files
                         window.open(
                           `http://localhost:8081${order.designFileUrl}`,
                         )
@@ -173,8 +179,6 @@ export default function PrintQueueDashboard() {
                           <Printer size={16} />
                         </button>
                       )}
-
-                      {/* ✅ 2. CONNECTED THE DELETE FUNCTION HERE */}
                       <button
                         onClick={() => handleDelete(order.orderId)}
                         className="p-2 text-slate-300 hover:text-red-500 transition-all"

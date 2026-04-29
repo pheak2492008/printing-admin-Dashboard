@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { InventoryBar } from "../../components/Dashboard/InventoryBar";
 import { StatusBadge } from "../../components/Dashboard/StatusBadge";
-import type { Order, InventoryItem } from "../../types/dashboard";
 import { Link } from "react-router-dom";
+import AddProductModal from "../../components/Dashboard/AddProductModal";
 
-// --- API Configuration ---
-const BASE_URL = "http://localhost:8081/api";
+const BASE_URL = "http://localhost:8081/api/v1";
 
-export default function Dashboard({
-  onNavigate,
-}: {
-  onNavigate: (page: string) => void;
-}) {
+export default function Dashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [stats, setStats] = useState({
     totalRevenue: 0,
     activeOrders: 0,
@@ -22,151 +18,112 @@ export default function Dashboard({
   });
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Orders from /api/orders/getall
-        const orderRes = await fetch(`${BASE_URL}/orders/getall`);
-        const orderData = await orderRes.json();
+        const [ordRes, invRes] = await Promise.all([
+          fetch(`${BASE_URL}/orders/getall`),
+          fetch(`${BASE_URL}/inventory`), // Path confirmed in image_d213a2
+        ]);
 
-        // 2. Fetch Materials from /api/materials/getall
-        const matRes = await fetch(`${BASE_URL}/materials/getall`);
-        const matData = await matRes.json();
+        const orderData = ordRes.ok ? await ordRes.json() : [];
+        const invData = invRes.ok ? await invRes.json() : [];
 
-        // --- CALCULATE STATISTICS ---
+        // Correct field mapping for Inventory
+        const lowStock = invData.filter(
+          (item: any) => (item.remainingStockM2 || 0) < 20,
+        ).length;
         const revenue = orderData.reduce(
-          (sum: number, item: any) => sum + item.totalPrice,
+          (sum: number, o: any) => sum + (o.totalPrice || 0),
           0,
         );
-        const active = orderData.filter(
-          (item: any) => item.status !== "COMPLETED",
-        ).length;
-        const lowStock = matData.filter(
-          (item: any) => item.currentStock < 20,
-        ).length;
 
-        setOrders(orderData.slice(0, 5)); // Show only latest 5 in the "Live Queue"
-        setInventory(matData);
+        setOrders(orderData.slice(0, 5));
+        setInventory(invData);
         setStats({
           totalRevenue: revenue,
-          activeOrders: active,
+          activeOrders: orderData.filter((o: any) => o.status !== "COMPLETED")
+            .length,
           lowStockCount: lowStock,
         });
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDashboardData();
+    fetchData();
   }, []);
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen font-black text-slate-400 italic animate-pulse">
-        SYNCING DASHBOARD DATA...
+      <div className="flex items-center justify-center min-h-screen font-black text-gray-300 italic animate-pulse">
+        LOADING DATA...
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full overflow-auto">
-        <header className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
-          <p className="text-sm text-gray-500">
-            Welcome back! Here's what's happening today.
-          </p>
+      <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
+        <header className="mb-8 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Overview</h2>
+            <p className="text-sm text-gray-500">
+              Real-time shop performance monitoring.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-transform hover:scale-105"
+          >
+            + Post Product
+          </button>
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatCard
             label="Total Revenue"
             value={`$${stats.totalRevenue.toFixed(2)}`}
-            change="+12%"
+            color="text-gray-900"
           />
           <StatCard
             label="Active Orders"
             value={stats.activeOrders.toString()}
-            change="+5%"
+            color="text-blue-600"
           />
-          <StatCard label="Completion" value="94%" change="+2%" />
           <StatCard
             label="Low Stock"
             value={`${stats.lowStockCount} Items`}
-            change="Action Req"
+            color={
+              stats.lowStockCount > 0 ? "text-orange-500" : "text-gray-900"
+            }
             isWarn={stats.lowStockCount > 0}
           />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Table Section */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-gray-800">Live Order Queue</h3>
-              <Link
-                to="/orders"
-                className="text-sm text-blue-500 font-semibold hover:underline"
-              >
-                View All
-              </Link>
-            </div>
-
+            <h3 className="font-bold text-gray-800 mb-6">Live Order Queue</h3>
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[10px] text-gray-400 uppercase tracking-wider border-b border-gray-50">
-                  <th className="pb-4">Order / Client</th>
-                  <th className="pb-4">Specs</th>
-                  <th className="pb-4">File</th>
+                  <th className="pb-4">Client</th>
+                  <th className="pb-4">Dimensions</th>
                   <th className="pb-4">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {orders.map((order) => (
-                  <tr
-                    key={order.orderId}
-                    className="group hover:bg-gray-50/50 transition-colors"
-                  >
-                    <td className="py-4">
-                      <div className="font-bold text-sm text-gray-800">
-                        #{order.orderId}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {order.customerName}
-                      </div>
+                {orders.map((o) => (
+                  <tr key={o.orderId} className="hover:bg-gray-50">
+                    <td className="py-4 font-bold text-sm text-gray-800">
+                      {o.customerName}
+                    </td>
+                    <td className="py-4 text-xs text-gray-600">
+                      {o.width}m x {o.length}m
                     </td>
                     <td className="py-4">
-                      <div className="text-xs text-gray-600">
-                        {order.width}m x {order.length}m
-                      </div>
-                      <div className="text-[10px] font-bold mt-1 px-1.5 py-0.5 rounded w-fit bg-slate-100 text-slate-500 uppercase">
-                        {order.dpiQuality || "Standard"}
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      {/* Interactive File Link */}
-                      <button
-                        onClick={() =>
-                          window.open(
-                            `http://localhost:8081${order.designFileUrl}`,
-                          )
-                        }
-                        className="flex items-center gap-2 group/file text-left"
-                      >
-                        <div className="p-1.5 bg-slate-50 rounded group-hover/file:bg-blue-50 transition-colors">
-                          {order.designFileUrl?.match(/\.(jpg|jpeg|png|gif)$/i)
-                            ? "🖼️"
-                            : "📄"}
-                        </div>
-                        <span className="text-[11px] font-bold text-slate-500 group-hover/file:text-blue-600 truncate max-w-[100px]">
-                          {order.designFileUrl?.split("_").pop() || "View"}
-                        </span>
-                      </button>
-                    </td>
-                    <td className="py-4">
-                      <StatusBadge status={order.status} />
+                      <StatusBadge status={o.status} />
                     </td>
                   </tr>
                 ))}
@@ -174,44 +131,41 @@ export default function Dashboard({
             </table>
           </div>
 
-          {/* Inventory Section */}
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-            <h3 className="font-bold text-gray-800 mb-6">Inventory Levels</h3>
+            <h3 className="font-bold text-gray-800 mb-6">Inventory</h3>
             <div className="space-y-6">
               {inventory.map((item, i) => (
                 <InventoryBar
                   key={i}
                   item={{
                     name: item.materialName,
-                    used: item.currentStock, // Assumes backend provides stock
-                    total: 100, // Static baseline
+                    used: item.remainingStockM2, // Fix for image_d213a2
+                    total: item.totalStockM2,
                     unit: "m",
-                    low: item.currentStock < 20,
+                    low: item.remainingStockM2 < 20,
                   }}
                 />
               ))}
             </div>
           </div>
         </div>
+        <AddProductModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </main>
     </div>
   );
 }
 
-const StatCard = ({ label, value, change, isWarn }: any) => (
-  <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-transform hover:scale-[1.02]">
-    <div className="text-xs font-semibold text-gray-400 uppercase tracking-tight">
-      {label}
-    </div>
-    <div
-      className={`text-2xl font-bold mt-1 ${isWarn ? "text-orange-500" : "text-gray-900"}`}
-    >
-      {value}
-    </div>
-    <div
-      className={`text-xs mt-2 flex items-center gap-1 ${isWarn ? "text-orange-400" : "text-green-500"}`}
-    >
-      {isWarn && <span>⚠️</span>} {change}
-    </div>
+const StatCard = ({ label, value, color, isWarn }: any) => (
+  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+    <div className="text-xs font-bold text-gray-400 uppercase">{label}</div>
+    <div className={`text-3xl font-black mt-1 ${color}`}>{value}</div>
+    {isWarn && (
+      <div className="text-[10px] mt-2 text-orange-400 font-bold">
+        ⚠️ RESTOCK REQUIRED
+      </div>
+    )}
   </div>
 );
